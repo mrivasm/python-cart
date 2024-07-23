@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block content %}
+<h1 class="mt-4">Shopping Cart</h1>
+<table class="table table-bordered">
+    <thead>
+        <tr>
+            <th>Product</th>
+            <th>Price</th>
+            <th>Action</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for item in cart %}
+        <tr>
+            <td>{{ item.name }}</td>
+            <td>${{ "{:.2f}".format(item.price) }}</td>
+            <td>
+                <a href="{{ url_for('remove_from_cart', product_id=item.id) }}" class="btn btn-danger">Remove</a>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+<h3>Total: ${{ "{:.2f}".format(total) }}</h3>
+<a href="{{ url_for('index') }}" class="btn btn-secondary">Continue Shopping</a>
+<a href="{{ url_for('checkout') }}" class="btn btn-primary">Proceed to Checkout</a>
+{% endblock %}
