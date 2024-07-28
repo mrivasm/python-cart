@@ -1,19 +1,6 @@
 {% extends "base.html" %}
 {% block content %}
-<h1 class="mt-4">Product Categories</h1>
-<div class="row mt-4">
-    {% for category in categories %}
-    <div class="col-md-4">
-        <div class="card mb-4">
-            <div class="card-body">
-                <h5 class="card-title">{{ category }}</h5>
-                <a href="{{ url_for('category', category_name=category) }}" class="btn btn-primary">View Products</a>
-            </div>
-        </div>
-    </div>
-    {% endfor %}
-</div>
-<h1 class="mt-4">All Products</h1>
+<h1 class="mt-4">{{ category }}</h1>
 <div class="row mt-4">
     {% for product in products %}
     <div class="col-md-4">
@@ -26,5 +13,8 @@
         </div>
     </div>
     {% endfor %}
+    {% if not products %}
+    <p>No products found in this category.</p>
+    {% endif %}
 </div>
 {% endblock %}
