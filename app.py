@@ -1,11 +1,13 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, session
-from models import Product, User, ShoppingCart
+from models import Product, Category, User, ShoppingCart
 
 app = Flask(__name__)
 app.secret_key = 'supersecretkey'  # Ensure this is a secure and unique key
 
-# In-memory user storage
-users = {}
+# In-memory user and category storage
+users = {'admin': User('admin', 'password')}  # Adding an admin user
+categories = [Category('Footwear'), Category(
+    'Clothing'), Category('Accessories')]
 
 # Sample product data
 products = [
@@ -25,10 +27,14 @@ products = [
 cart = ShoppingCart()
 
 
+def is_admin():
+    return session.get('username') == 'admin'
+
+
 @app.route('/')
 def index():
-    categories = ['Footwear', 'Clothing', 'Accessories']
-    return render_template('index.html', products=products, categories=categories)
+    category_names = [category.name for category in categories]
+    return render_template('index.html', products=products, categories=category_names)
 
 
 @app.route('/category/<category_name>')
@@ -38,7 +44,6 @@ def category(category_name):
             product for product in products if product.category == category_name]
         return render_template('category.html', category=category_name, products=category_products)
     except Exception as e:
-        # Log the error
         print(f"Error: {e}")
         flash('An error occurred while trying to load the category.', 'danger')
         return redirect(url_for('index'))
@@ -75,7 +80,6 @@ def checkout():
         return redirect(url_for('login'))
 
     if request.method == 'POST':
-        # Store the cart items in session before clearing
         # Convert Product objects to dicts
         session['receipt_cart'] = [item.__dict__ for item in cart.items]
         cart.clear_cart()  # Clear cart after storing
@@ -92,13 +96,11 @@ def receipt():
         flash('You need to login first.', 'danger')
         return redirect(url_for('login'))
 
-    # Retrieve the cart from the session
     receipt_cart = session.pop('receipt_cart', None)
     if not receipt_cart:
         flash('No receipt available. Please complete the checkout process.', 'danger')
         return redirect(url_for('index'))
 
-    # Convert dicts back to Product objects using the from_dict method
     receipt_cart = [Product.from_dict(item) for item in receipt_cart]
     total = sum(item.price for item in receipt_cart)
     return render_template('receipt.html', cart=receipt_cart, total=total)
@@ -150,6 +152,115 @@ def search():
     results = [product for product in products if query.lower()
                in product.name.lower()]
     return render_template('search.html', query=query, results=results)
+
+
+@app.route('/admin')
+def admin():
+    if not is_admin():
+        flash('You need to be an admin to access this page.', 'danger')
+        return redirect(url_for('index'))
+
+    return render_template('admin.html', products=products, categories=categories)
+
+
+@app.route('/admin/add_product', methods=['GET', 'POST'])
+def add_product():
+    if not is_admin():
+        flash('You need to be an admin to access this page.', 'danger')
+        return redirect(url_for('index'))
+
+    if request.method == 'POST':
+        name = request.form['name']
+        price = float(request.form['price'])
+        category = request.form['category']
+        product_id = max(p.id for p in products) + 1 if products else 1
+
+        new_product = Product(product_id, name, price, category)
+        products.append(new_product)
+        flash('Product added successfully!', 'success')
+        return redirect(url_for('admin'))
+
+    return render_template('add_product.html', categories=categories)
+
+
+@app.route('/admin/edit_product/<int:product_id>', methods=['GET', 'POST'])
+def edit_product(product_id):
+    if not is_admin():
+        flash('You need to be an admin to access this page.', 'danger')
+        return redirect(url_for('index'))
+
+    product = next((p for p in products if p.id == product_id), None)
+    if not product:
+        flash('Product not found.', 'danger')
+        return redirect(url_for('admin'))
+
+    if request.method == 'POST':
+        product.name = request.form['name']
+        product.price = float(request.form['price'])
+        product.category = request.form['category']
+        flash('Product updated successfully!', 'success')
+        return redirect(url_for('admin'))
+
+    return render_template('edit_product.html', product=product, categories=categories)
+
+
+@app.route('/admin/delete_product/<int:product_id>', methods=['POST'])
+def delete_product(product_id):
+    if not is_admin():
+        flash('You need to be an admin to access this page.', 'danger')
+        return redirect(url_for('index'))
+
+    global products
+    products = [p for p in products if p.id != product_id]
+    flash('Product deleted successfully!', 'success')
+    return redirect(url_for('admin'))
+
+
+@app.route('/admin/add_category', methods=['GET', 'POST'])
+def add_category():
+    if not is_admin():
+        flash('You need to be an admin to access this page.', 'danger')
+        return redirect(url_for('index'))
+
+    if request.method == 'POST':
+        name = request.form['name']
+        new_category = Category(name)
+        categories.append(new_category)
+        flash('Category added successfully!', 'success')
+        return redirect(url_for('admin'))
+
+    return render_template('add_category.html')
+
+
+@app.route('/admin/edit_category/<string:category_name>', methods=['GET', 'POST'])
+def edit_category(category_name):
+    if not is_admin():
+        flash('You need to be an admin to access this page.', 'danger')
+        return redirect(url_for('index'))
+
+    category = next((c for c in categories if c.name == category_name), None)
+    if not category:
+        flash('Category not found.', 'danger')
+        return redirect(url_for('admin'))
+
+    if request.method == 'POST':
+        category.name = request.form['name']
+        flash('Category updated successfully!', 'success')
+        return redirect(url_for('admin'))
+
+    return render_template('edit_category.html', category=category)
+
+
+@app.route('/admin/delete_category/<string:category_name>', methods=['POST'])
+def delete_category(category_name):
+    if not is_admin():
+        flash('You need to be an admin to access this page.', 'danger')
+        return redirect(url_for('index'))
+
+    global categories
+    categories = [c for c in categories if c.name != category_name]
+    flash('Category deleted successfully!', 'success')
+    return redirect(url_for('admin'))
 
 
 if __name__ == '__main__':

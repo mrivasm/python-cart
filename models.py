@@ -1,6 +1,11 @@
 from werkzeug.security import generate_password_hash, check_password_hash
 
 
+class Category:
+    def __init__(self, name):
+        self.name = name
+
+
 class Product:
     def __init__(self, product_id, name, price, category):
         self.id = product_id
