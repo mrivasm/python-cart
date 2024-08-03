@@ -1,153 +1,182 @@
-Shopping Cart Application Documentation
-Overview
-This documentation provides an overview of the Shopping Cart Application developed using Flask. The application includes user authentication, product browsing, shopping cart management, checkout, and admin features for managing products and categories.
+# Technical Documentation for Shopping Cart Application
 
-Table of Contents
-Requirements
-Setup and Installation
-Application Structure
-Routes
-Admin Features
-Templates
-Usage
-Requirements
-Python 3.x
-Flask
-Bootstrap (for front-end design)
-Setup and Installation
-Clone the Repository
-bash
-Copy code
-git clone https://github.com/mrivasm/python-cart.git
-cd <repository-directory>
-Create a Virtual Environment
-bash
-Copy code
-python -m venv venv
-source venv/bin/activate  # On Windows use `venv\Scripts\activate`
-Install Dependencies
-bash
-Copy code
-pip install Flask
-Run the Application
-bash
-Copy code
+## Overview
+
+This document provides technical details about the Flask-based Shopping Cart application. The application features user registration, login, product search, shopping cart management, and admin functionalities for managing products and categories. It uses the Flask framework and Bootstrap for the frontend.
+
+## Table of Contents
+
+1. [Project Structure](#project-structure)
+2. [Installation](#installation)
+3. [Configuration](#configuration)
+4. [Models](#models)
+5. [Routes](#routes)
+6. [Templates](#templates)
+7. [Admin Features](#admin-features)
+8. [Session Management](#session-management)
+9. [Running the Application](#running-the-application)
+
+## Project Structure
+
+![alt text](image.png)
+
+## Installation
+
+1. **Clone the Repository**:
+   ```bash
+   git clone <repository-url>
+   cd shopping-cart
+
+2. Set Up a Virtual Environment:
+   ```bash
+   python3 -m venv venv
+   source venv/bin/activate
+3. Install Dependencies:
+    ```bash
+    pip install Flask
+
+4. Run the Application:
+    ```bash
+    python app.py
+
+### Configuration
+Ensure the Flask secret key is set for session management:
+```python
+    app.secret_key = 'supersecretkey'
+```
+
+This key should be unique and kept secure.
+
+### Models
+### Product
+The Product class represents a product in the store.
+
+``` python
+class Product:
+    def __init__(self, product_id, name, price, category):
+        self.id = product_id
+        self.name = name
+        self.price = price
+        self.category = category
+
+    @classmethod
+    def from_dict(cls, data):
+        return cls(
+            product_id=data['id'],
+            name=data['name'],
+            price=data['price'],
+            category=data['category']
+        )
+```
+### Category
+The Category class represents a product category.
+``` python
+class Category:
+    def __init__(self, name):
+        self.name = name
+```
+### User
+The User class represents a user of the application.
+``` python
+class User:
+    def __init__(self, username, password):
+        self.username = username
+        self.password = password  # In a real app, use hashed passwords
+
+    def check_password(self, password):
+        return self.password == password
+```
+### ShoppingCart
+The ShoppingCart class manages the products in the cart.
+
+``` python
+class ShoppingCart:
+    def __init__(self):
+        self.items = []
+
+    def add_product(self, product):
+        self.items.append(product)
+
+    def remove_product(self, product_id):
+        self.items = [item for item in self.items if item.id != product_id]
+
+    def get_total(self):
+        return sum(item.price for item in self.items)
+
+    def clear_cart(self):
+        self.items = []
+```
+### Routes
+#### User Authentication
+#### Register: /register
+#### Login: /login
+#### Logout: /logout
+#### Shopping Cart
+#### iew Cart: /cart
+#### Add to Cart: /add_to_cart/<int:product_id>
+#### Remove from Cart: /remove_from_cart/<int:product_id>
+#### Checkout: /checkout
+#### Receipt: /receipt
+
+#### Products and Categories
+#### View Categories: /category/<category_name>
+#### Search Products: /search
+#### Admin
+#### Admin Dashboard: /admin
+#### Add Product: /admin/add_product
+#### Edit Product: /admin/edit_product/<int:product_id>
+#### Delete Product: /admin/delete_product/<int:product_id>
+#### Add Category: /admin/add_category
+#### Edit Category: /admin/edit_category/<string:category_name>
+#### Delete Category: /admin/delete_category/<string:category_name>
+
+### Templates
+#### The application uses Jinja2 templates to render HTML pages.
+
+#### base.html: The base template extended by other templates.
+#### index.html: The homepage displaying products.
+#### category.html: Displays products in a specific category.
+#### cart.html: Displays the shopping cart contents.
+#### checkout.html: Checkout form.
+#### receipt.html: Displays the receipt after checkout.
+#### register.html: User registration form.
+#### login.html: User login form.
+#### search.html: Search results page.
+#### admin.html: Admin dashboard.
+#### add_product.html: Form to add a product.
+#### edit_product.html: Form to edit a product.
+#### add_category.html: Form to add a category.
+#### edit_category.html: Form to edit a category
+
+### Admin Features
+The admin interface allows managing products and categories. Only users with the username admin can access these routes.
+
+#### Admin Routes
+#### Admin Dashboard: Displays products and categories with options to add, edit, or delete.
+#### Add Product: Form to add a new product.
+#### Edit Product: Form to edit an existing product.
+#### Delete Product: Action to delete a product.
+#### Add Category: Form to add a new category.
+#### Edit Category: Form to edit an existing category.
+#### Delete Category: Action to delete a category.
+
+### Session Management
+The application uses Flask sessions to manage user authentication and shopping cart state.
+
+#### Login: Stores the username in the session.
+#### Logout: Clears the username from the session.
+#### Shopping Cart: Stores the cart items in the session during checkout to generate the receipt.
+#### Running the Application
+1. Activate the Virtual Environment:
+``` bash
+source venv/bin/activate
+```
+2. Run the Flask Application:
+``` python
 python app.py
-Access the Application
-Open your web browser and navigate to http://127.0.0.1:5000/.
 
-Application Structure
-arduino
-Copy code
-shopping-cart/
-│
-├── templates/
-│   ├── base.html
-│   ├── index.html
-│   ├── category.html
-│   ├── cart.html
-│   ├── checkout.html
-│   ├── receipt.html
-│   ├── register.html
-│   ├── login.html
-│   ├── search.html
-│   ├── admin.html
-│   ├── add_product.html
-│   ├── edit_product.html
-│   ├── add_category.html
-│   ├── edit_category.html
-│
-├── app.py
-├── models.py
-└── README.md
-Routes
-User Authentication
-Register
-GET /register: Display the registration form.
-POST /register: Handle the user registration.
-Login
-GET /login: Display the login form.
-POST /login: Handle user login.
-Logout
-GET /logout: Log the user out and redirect to the home page.
-Product and Category Browsing
-Home
-GET /: Display the list of products and categories.
-Category
-GET /category/<category_name>: Display products in a specific category.
-Search
-GET /search: Display the search form.
-POST /search: Handle product search and display results.
-Shopping Cart Management
-View Cart
-GET /cart: Display the user's shopping cart.
-Add to Cart
-GET /add_to_cart/<int:product_id>: Add a product to the cart.
-Remove from Cart
-GET /remove_from_cart/<int:product_id>: Remove a product from the cart.
-Checkout and Receipt
-Checkout
-GET /checkout: Display the checkout form.
-POST /checkout: Handle checkout and generate the receipt.
-Receipt
-GET /receipt: Display the receipt for the completed order.
-Admin Features
-Admin Dashboard
-GET /admin: Display the admin dashboard.
-Add Product
-GET /admin/add_product: Display the add product form.
-POST /admin/add_product: Handle adding a new product.
-Edit Product
-GET /admin/edit_product/<int:product_id>: Display the edit product form.
-POST /admin/edit_product/<int:product_id>: Handle editing a product.
-Delete Product
-POST /admin/delete_product/<int:product_id>: Handle deleting a product.
-Add Category
-GET /admin/add_category: Display the add category form.
-POST /admin/add_category: Handle adding a new category.
-Edit Category
-GET /admin/edit_category/<string:category_name>: Display the edit category form.
-POST /admin/edit_category/<string:category_name>: Handle editing a category.
-Delete Category
-POST /admin/delete_category/<string:category_name>: Handle deleting a category.
-Templates
-Base Template
-base.html: The base template that includes common elements like the header, footer, and navigation bar.
-User Templates
-index.html: Home page displaying products and categories.
-category.html: Displays products within a specific category.
-cart.html: Displays the user's shopping cart.
-checkout.html: Displays the checkout form.
-receipt.html: Displays the receipt after checkout.
-register.html: User registration form.
-login.html: User login form.
-search.html: Displays search results.
-Admin Templates
-admin.html: Admin dashboard.
-add_product.html: Form for adding a new product.
-edit_product.html: Form for editing a product.
-add_category.html: Form for adding a new category.
-edit_category.html: Form for editing a category.
-Usage
-Register
-Navigate to /register to create a new user account.
-Fill in the registration form and submit.
-Login
-Navigate to /login to log in to your account.
-Enter your username and password and submit.
-Browse Products
-View products on the home page or by category.
-Use the search form to find specific products.
-Manage Shopping Cart
-Add products to your cart from the product listings.
-View your cart at /cart.
-Remove products from your cart as needed.
-Checkout
-Navigate to /checkout to review your order and enter payment details.
-Submit the form to complete the purchase.
-View the receipt at /receipt.
-Admin Features
-Log in as an admin user (admin/password).
-Access the admin dashboard at /admin.
-Add, edit, or delete products and categories.
-This documentation provides an overview of the main features and usage of the Shopping Cart Application. For further details and code, refer to the source files in the repository.
+```
+3. Access the Application:
+Open a web browser and navigate to http://127.0.0.1:5000/.
+
+With this documentation, you should have a comprehensive understanding of the Flask Shopping Cart application, including its structure, functionality, and usage.
